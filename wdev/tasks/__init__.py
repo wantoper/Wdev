@@ -17,7 +17,6 @@ class Task(ABC):
         self.description = description
         self.next_success: Optional[Task] = None
         self.next_failure: Optional[Task] = None
-        self.hosts: List[Host] = []
 
     def set_next_success(self, task: 'Task') -> 'Task':
         """设置任务成功后的下一个任务"""
@@ -29,12 +28,8 @@ class Task(ABC):
         self.next_failure = task
         return task
 
-    def add_host(self, host: Host):
-        """添加任务执行的目标主机"""
-        self.hosts.append(host)
-
     @abstractmethod
-    def execute(self) -> TaskResult:
+    def execute(self,host: Host) -> TaskResult:
         """执行任务"""
         pass
 
@@ -44,17 +39,16 @@ class ShellTask(Task):
         super().__init__(name, description)
         self.command = command
 
-    def execute(self) -> TaskResult:
+    def execute(self,host: Host) -> TaskResult:
         all_output = []
         all_errors = []
         success = True
 
-        for host in self.hosts:
-            exit_code, output, error = host.execute_command(self.command)
-            if exit_code != 0:
-                success = False
-                all_errors.append(f"Host {host.name}: {error}")
-            all_output.append(f"Host {host.name}: {output}")
+        exit_code, output, error = host.execute_command(self.command)
+        if exit_code != 0:
+            success = False
+            all_errors.append(f"Host {host.name}: {error}")
+        all_output.append(f"Host {host.name}: {output}")
 
         return TaskResult(
             success=success,
@@ -69,7 +63,7 @@ class PythonTask(Task):
         self.callable_obj = callable_obj
         self.kwargs = kwargs
 
-    def execute(self) -> TaskResult:
+    def execute(self,host: Host) -> TaskResult:
         try:
             result = self.callable_obj(**self.kwargs)
             return TaskResult(success=True, output=str(result))

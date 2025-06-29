@@ -36,13 +36,13 @@ def main():
     )
 
     # 使用流式接口构建工作流
-    (workflow.add_flow(check_disk, [local_host, remote_host])
-        .set_next_success(deploy_service)
-        .set_next_success(check_service)
-        .set_next_failure(notify_error)
-        .add_notifier(console_notifier)
-        .add_notifier(email_notifier)
-        .end())
+    (workflow.add_task(check_disk, [local_host, remote_host])
+     .set_next_success(deploy_service)
+     .set_next_success(check_service)
+     .set_next_failure(notify_error))
+
+    workflow.add_notifier(email_notifier)
+    workflow.add_notifier(console_notifier)
 
     # 执行工作流
     success = workflow.execute()
