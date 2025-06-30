@@ -21,12 +21,12 @@ class Task(ABC):
     def set_next_success(self, task: 'Task') -> 'Task':
         """设置任务成功后的下一个任务"""
         self.next_success = task
-        return task
+        return self
 
     def set_next_failure(self, task: 'Task') -> 'Task':
         """设置任务失败后的下一个任务"""
         self.next_failure = task
-        return task
+        return self
 
     @abstractmethod
     def execute(self,host: Host) -> TaskResult:
@@ -47,13 +47,15 @@ class ShellTask(Task):
         exit_code, output, error = host.execute_command(self.command)
         if exit_code != 0:
             success = False
-            all_errors.append(f"Host {host.name}: {error}")
-        all_output.append(f"Host {host.name}: {output}")
+            all_output.append(error)
+            # all_errors.append(f"Host {host.name}: {error}")
+        # all_output.append(f"Host {host.name}: ===========\n{output}\n===========")
+        all_output.append(output)
 
         return TaskResult(
             success=success,
-            output="\n".join(all_output),
-            error="\n".join(all_errors)
+            output="".join(all_output),
+            error="".join(all_errors)
         )
 
 class PythonTask(Task):

@@ -17,44 +17,37 @@ class SimpleWorkflow(BaseWorkflow):
         
         # 对每个主机执行所有任务
         for host in self.hosts:
-            current = self.tasks[0]
-            task_index = 0
-            
-            while task_index < len(self.tasks):
-                current = self.tasks[task_index]
-                # 执行当前任务
-                result = current.execute(host)
-                self.task_results[f"{current.name}_{host.name}"] = result
-
-                # 发送任务执行结果通知
-                status = "成功" if result.success else "失败"
-                message = f"""
-任务: {current.name}
-主机: {host.name}
-状态: {status}
-输出:
-{result.output}
-"""
-                if result.error:
-                    message += f"\n错误:\n{result.error}"
-
-                self.notify_all(
-                    f"任务 {current.name} 在 {host.name} 上执行{status}",
-                    message
-                )
-
-                if not result.success:
-                    overall_success = False
-                    # 如果任务失败且有失败处理任务，执行失败处理
-                    if current.next_failure:
-                        current = current.next_failure
+            for main_task in self.tasks:
+                sub_task = None
+                while main_task or sub_task:
+                    if sub_task:
+                        current = sub_task
                     else:
-                        task_index += 1
-                else:
-                    # 如果任务成功且有后续任务，执行后续任务
-                    if current.next_success:
-                        current = current.next_success
-                    else:
-                        task_index += 1
+                        current = main_task
+                    result = current.execute(host)
+                    self.task_results[f"{current.name}_{host.name}"] = result
 
-        return overall_success 
+                    # 发送任务执行结果通知
+                    status = "成功" if result.success else "失败"
+                    message = f"""
+    任务: {current.name}
+    主机: {host.name}
+    状态: {status}
+    输出:
+    {result.output}
+    """
+                    if result.error:
+                        message += f"\n错误:\n{result.error}"
+
+                    self.notify_all(
+                        f"任务 {current.name} 在 {host.name} 上执行{status}",
+                        message
+                    )
+                    main_task = None
+                    if result.success:
+                        sub_task = current.next_success
+                    else:
+                        overall_success = False
+                        sub_task = current.next_failure
+                    self.task_track[f"{current.name}_{host.name}_{result.success}"] = current
+        return overall_success

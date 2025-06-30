@@ -14,6 +14,7 @@ class BaseWorkflow(ABC):
         self.notifiers: List[Notifier] = []
         self.task_results: Dict[str, TaskResult] = {}
         self.hosts: List[Host] = []
+        self.task_track: Dict[str, List[Task]] = {}
 
     def add_host(self, host: Host):
         """添加主机"""
