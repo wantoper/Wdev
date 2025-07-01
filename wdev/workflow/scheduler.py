@@ -3,11 +3,10 @@ import time
 import schedule
 from typing import Dict, Optional, List
 from datetime import datetime
-from .base import BaseWorkflow
-import os
+from .workflow import Workflow
 
 class WorkflowJob:
-    def __init__(self, workflow: BaseWorkflow, interval: Optional[int] = None, 
+    def __init__(self, workflow: Workflow, interval: Optional[int] = None,
                  at_time: Optional[str] = None, async_mode: bool = False):
         self.workflow = workflow
         self.interval = interval  # 间隔时间（秒）
@@ -54,7 +53,7 @@ class WorkflowScheduler:
             # 清除从当前位置到屏幕底部的所有内容
             print("\033[J", end="")
 
-    def add_workflow(self, workflow: BaseWorkflow, interval: Optional[int] = None, 
+    def add_workflow(self, workflow: Workflow, interval: Optional[int] = None,
                     at_time: Optional[str] = None, async_mode: bool = False) -> None:
         """
         添加工作流到调度器
@@ -160,9 +159,9 @@ class WorkflowScheduler:
         self._thread = threading.Thread(target=self._run_scheduler)
         self._thread.daemon = True  # 设置为守护线程
         self._thread.start()
+        print("Workflow Scheduler started")
         while True:
             time.sleep(1)
-        print("Workflow Scheduler started")
 
     def stop(self):
         """停止调度器"""

@@ -1,7 +1,7 @@
-from wdev.workflow.simple import SimpleWorkflow
+from wdev.workflow import SimpleWorkflow
 from wdev.hosts import SSHHost, LocalHost
 from wdev.tasks import ShellTask
-from wdev.notifications import EmailNotifier, ConsoleNotifier
+from wdev.notifiers import EmailNotifier, ConsoleNotifier
 import os
 from dotenv import load_dotenv
 
@@ -12,7 +12,7 @@ def main():
     workflow = SimpleWorkflow("部署工作流", "用于部署和检查服务状态")
     console_notifier = ConsoleNotifier()
 
-    remote_host = SSHHost(hostname="192.168.108.130",username="root",password="passwd")
+    remote_host = SSHHost(hostname="192.168.69.136", username="root", password="")
 
     init_task = ShellTask("初始化","rm -rf /root/test1")
 

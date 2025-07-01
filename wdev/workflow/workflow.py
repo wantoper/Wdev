@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, List
-from ..tasks import Task, TaskResult
-from ..hosts import Host
-from ..notifications import Notifier
+from wdev.tasks import Task, TaskResult
+from wdev.hosts import Host
+from wdev.notifiers import Notifier
 
-class BaseWorkflow(ABC):
+class Workflow(ABC):
     """工作流基类，定义基本接口和共同功能"""
     
     def __init__(self, name: str, description: str = ""):

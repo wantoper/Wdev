@@ -1,9 +1,6 @@
-from typing import List
-from .base import BaseWorkflow
-from ..hosts import Host
-from ..tasks import Task
+from .workflow import Workflow
 
-class SimpleWorkflow(BaseWorkflow):
+class SimpleWorkflow(Workflow):
     """简单工作流类，按顺序执行一次所有任务"""
 
     def execute(self) -> bool:

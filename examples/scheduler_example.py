@@ -1,8 +1,8 @@
-from wdev.workflow.simple import SimpleWorkflow
-from wdev.workflow.scheduler import WorkflowScheduler
+from wdev.workflow import SimpleWorkflow
+from wdev.workflow import WorkflowScheduler
 from wdev.hosts import SSHHost
 from wdev.tasks import ShellTask
-from wdev.notifications import ConsoleNotifier
+from wdev.notifiers import ConsoleNotifier
 import time
 
 def main():
@@ -10,7 +10,7 @@ def main():
     scheduler = WorkflowScheduler()
     console_notifier = ConsoleNotifier()
 
-    remote_host = SSHHost(hostname="192.168.108.130", username="root", password="passwd")
+    remote_host = SSHHost(hostname="192.168.69.136", username="root", password="")
     workflow = SimpleWorkflow("部署工作流", "用于部署和检查服务状态")
     check_disk = ShellTask("检查磁盘空间", "df -h")
     (workflow.add_host(remote_host)
