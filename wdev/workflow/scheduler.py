@@ -4,6 +4,7 @@ import schedule
 from typing import Dict, Optional, List
 from datetime import datetime
 from .workflow import Workflow
+from prettytable import PrettyTable
 
 class WorkflowJob:
     def __init__(self, workflow: Workflow, interval: Optional[int] = None,
@@ -43,15 +44,6 @@ class WorkflowScheduler:
         self.jobs: Dict[str, WorkflowJob] = {}
         self._running = False
         self._thread: Optional[threading.Thread] = None
-        self._last_status_lines = 0  # 记录上次打印的行数
-
-    def _clear_previous_output(self):
-        """清除之前的输出"""
-        if self._last_status_lines > 0:
-            # 将光标向上移动之前打印的行数
-            print(f"\033[{self._last_status_lines}A", end="")
-            # 清除从当前位置到屏幕底部的所有内容
-            print("\033[J", end="")
 
     def add_workflow(self, workflow: Workflow, interval: Optional[int] = None,
                     at_time: Optional[str] = None, async_mode: bool = False) -> None:
@@ -84,38 +76,11 @@ class WorkflowScheduler:
 
     def _print_status(self):
         """打印所有工作流状态（表格形式）"""
-        self._clear_previous_output()
-        
-        # 定义表格列宽
-        col_widths = {
-            'name': 20,
-            'status': 10,
-            'last_run': 25,
-            'schedule': 30,
-            'async': 8,
-            'log': 50
-        }
-        
-        # 打印表头
-        header = (
-            f"{'Workflow Name':<{col_widths['name']}} | "
-            f"{'Status':<{col_widths['status']}} | "
-            f"{'Last Run':<{col_widths['last_run']}} | "
-            f"{'Schedule':<{col_widths['schedule']}} | "
-            f"{'Async':<{col_widths['async']}}"
-            f"{'Async':<{col_widths['log']}}"
-        )
-        separator = "-" * (sum(col_widths.values()) + len(col_widths) * 3)
-        
-        lines = []
-        lines.append(f"\n=== Workflow Scheduler Status === (Total: {len(self.jobs)})")
-        lines.append(separator)
-        lines.append(header)
-        lines.append(separator)
-        
+        x = PrettyTable(["Workflow Name", "Status", "Last Run", "Schedule", "Async", "Log"])
+        x.align["Log"]= "l"
         # 打印每个工作流的状态
         for name, job in self.jobs.items():
-            status = "Running" if job.is_running else "Idle"
+            status = "Running" if job.is_running else "Waiting"
             last_run = job.last_run.strftime("%Y-%m-%d %H:%M:%S") if job.last_run else "Never"
             
             schedule_info = []
@@ -124,23 +89,10 @@ class WorkflowScheduler:
             if job.at_time:
                 schedule_info.append(f"At {job.at_time}")
             schedule_str = " and ".join(schedule_info) if schedule_info else "Manual"
-            
-            row = (
-                f"{name[:col_widths['name']]:<{col_widths['name']}} | "
-                f"{status:<{col_widths['status']}} | "
-                f"{last_run:<{col_widths['last_run']}} | "
-                f"{schedule_str[:col_widths['schedule']]:<{col_widths['schedule']}} | "
-                f"{str(job.async_mode):<{col_widths['async']}}"
-            )
-            lines.append(row)
-        
-        lines.append(separator)
-        
-        # 保存本次打印的行数
-        self._last_status_lines = len(lines)
-        
-        # 打印所有行
-        print("\n".join(lines))
+
+            x.add_row([name, status, last_run, schedule_str, job.async_mode, job.workflow.print_task_routes()])
+        print("\033c", end="")
+        print(x,end='\n')
 
     def _run_scheduler(self):
         """运行调度器主循环"""
@@ -159,7 +111,6 @@ class WorkflowScheduler:
         self._thread = threading.Thread(target=self._run_scheduler)
         self._thread.daemon = True  # 设置为守护线程
         self._thread.start()
-        print("Workflow Scheduler started")
         while True:
             time.sleep(1)
 

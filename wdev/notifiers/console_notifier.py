@@ -8,7 +8,7 @@ class ConsoleNotifier(Notifier):
         super().__init__("console")
 
     def notify(self, subject: str, message: str, **kwargs) -> bool:
-        print(f"\n=== {subject} ===")
+        # print(f"\n=== {subject} ===")
         print(message)
-        print("=" * (len(subject) + 8))
+        # print("=" * (len(subject) + 8))
         return True

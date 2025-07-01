@@ -50,6 +50,8 @@ class SimpleWorkflow(Workflow):
 
     def print_task_routes(self):
         """以树状结构打印任务执行路径，任务名称带颜色显示状态（不依赖第三方库）"""
+        result_msg = []
+
         COLOR_GREEN = '\033[92m'
         COLOR_RED = '\033[91m'
         COLOR_YELLOW = '\033[93m'
@@ -63,13 +65,16 @@ class SimpleWorkflow(Workflow):
 
         # 遍历每个主机的任务跟踪记录
         for host_name, nodes in self.task_track.items():
-            print(f"\n主机: {host_name}")
+            msg = f"\n=====主机: {host_name}  工作流:{self.name}====="
+            # print(msg)
+            result_msg.append(msg)
+
             # 处理该主机上的每个主任务树
             for root_node in nodes:
                 # 使用栈实现非递归深度优先遍历
                 stack = []
                 # 每个元素包含：节点、深度、父节点前缀、是否为最后一个兄弟节点、分支标签
-                stack.append((root_node, 0, "", True, ""))
+                stack.append((root_node, 0, "", True, f"[{root_node.status}] "))
 
                 while stack:
                     node, depth, parent_prefix, is_last, branch_label = stack.pop()
@@ -83,7 +88,9 @@ class SimpleWorkflow(Workflow):
                     # 组装节点显示信息
                     node_info = node.task.name + branch_label
                     color = STATUS_COLORS.get(node.status, COLOR_RESET)
-                    print(f"{parent_prefix}{connector}{color}{node_info}{COLOR_RESET}")
+                    msg = f"{parent_prefix}{connector}{color}{node_info}{COLOR_RESET}"
+                    # print(msg)
+                    result_msg.append(msg)
 
                     # 准备子节点（成功分支和失败分支）
                     children = []
@@ -103,7 +110,10 @@ class SimpleWorkflow(Workflow):
                         # 当前子节点是否是父节点的最后一个子节点
                         is_last_child = (i == len(children) - 1)
                         stack.append((child, depth + 1, new_parent_prefix, is_last_child, label))
-
+            msg = "======================================="
+            # print(msg)
+            result_msg.append(msg)
+        return "\n".join(result_msg)
     def run_task(self, task: Task,host: Host):
         #递归运行
         if not task:
@@ -125,12 +135,12 @@ class SimpleWorkflow(Workflow):
             raise ValueError("工作流中没有任务")
         if not self.hosts:
             raise ValueError("工作流中没有主机")
-
+        self.task_track.clear()
         overall_success = True
         # 对每个主机执行所有任务
         for host in self.hosts:
             for main_task in self.tasks:
                 node = self.run_task(main_task, host)
                 self.task_track.setdefault(host.name, []).append(node)
-
+        self.notify_all("工作流执行完成", self.print_task_routes())
         return overall_success

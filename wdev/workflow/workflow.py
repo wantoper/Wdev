@@ -14,7 +14,6 @@ class Workflow(ABC):
         self.notifiers: List[Notifier] = []
         self.task_results: Dict[str, TaskResult] = {}
         self.hosts: List[Host] = []
-        self.task_track: Dict[str, List[Task]] = {}
 
     def add_host(self, host: Host):
         """添加主机"""
@@ -35,6 +34,11 @@ class Workflow(ABC):
         """向所有通知器发送通知"""
         for notifier in self.notifiers:
             notifier.notify(subject, message)
+
+    @abstractmethod
+    def print_task_routes(self) -> str:
+        """返回日志"""
+        pass
 
     @abstractmethod
     def execute(self) -> bool:

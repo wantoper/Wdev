@@ -10,7 +10,9 @@ class PythonTask(Task):
 
     def execute(self,host: Host) -> TaskResult:
         try:
-            result = self.callable_obj(**self.kwargs)
-            return TaskResult(success=True, output=str(result))
+            self.task_results = self.callable_obj(self,host,**self.kwargs)
         except Exception as e:
-            return TaskResult(success=False, output="", error=str(e))
+            # print("执行Python任务时发生错误:", e)
+            self.task_results = TaskResult(success=False, output="", error=str(e))
+
+        return self.task_results
